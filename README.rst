@@ -1,8 +1,8 @@
 PEM File Certificate Annotations
 ================================
 
-Certificates in DER format, while compatible with the ASCII character are
-opaque to human readers. While ``openssl x509 -text -in somefile.crt``
+Certificates in DER format, while compatible with the ASCII character set
+are opaque to human readers. While ``openssl x509 -text -in somefile.crt``
 provides human-readable information, it is sub-optimal for some use-cases:
 
 *  Only handles one certificate at a time.
