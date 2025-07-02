@@ -1,26 +1,33 @@
 PEM File Certificate Annotations
 ================================
 
-Many PEM files contain several certificates without annotations. This program can
-add those annotations to help identify what a given certificate block in the file 
-contains.
+Certificates in DER format, while compatible with the ASCII character are
+opaque to human readers. While ``openssl x509 -text -in somefile.crt``
+provides human-readable information, it is sub-optimal for some use-cases:
 
-Annotations are added above each certificate block, and look like this:
+*  Only handles one certificate at a time.
+*  Information overload!
+*  Ugly formatting.
+
+This tool can handle multiple files and multiple certificates per file,
+and outputs the most important information just before each certificate block:
 
 .. code-block:: text
 
-    Subject:    CN=localhost,O=Python Software Foundation,L=Castle Anthrax,C=XY
-    Issuer:     CN=localhost,O=Python Software Foundation,L=Castle Anthrax,C=XY
-    Not Before: 2018-08-29 14:23:15 +00:00
-    Not After:  2028-08-26 14:23:15 +00:00
+    $ annotate-pem reg.crt | head
+    Subject:          CN=kreg,OU=Research division,O=Mouse Inc.,L=Floating in space
+    Issuer:           CN=INT CA,OU=Research Division,O=Mouse Inc.,L=Floating in space
+    Not Before:       2025-07-01 14:58:44 +00:00
+    Not After:        2027-07-11 14:58:44 +00:00
+    Subj. Alt. Names: DNS:kreg, DNS:kreg.local, IP:192.168.122.215
     -----BEGIN CERTIFICATE-----
-    MIIEWTCCAsGgAwIBAgIJAJinz4jHSjLtMA0GCSqGSIb3DQEBCwUAMF8xCzAJBgNV
-    BAYTAlhZMRcwFQYDVQQHDA5DYXN0bGUgQW50aHJheDEjMCEGA1UECgwaUHl0aG9u
-    ...
+    MIIIBDCCBCygAwIBAgICEAwwDQYJKoZIhvcNAQELBQAwXjEaMBgGA1UEBwwRRmxv
+    YXRpbmcgaW4gc3BhY2UxEzARBgNVBAoMCk1vdXNlIEluYy4xGjAYBgNVBAsMEVJl
+    c2VhcmNoIERpdmlzaW9uMQ8wDQYDVQQDDAZJTlQgQ0EwHhcNMjUwNzAxMTQ1ODQ0
+    WhcNMjcwNzExMTQ1ODQ0WjBcMRowGAYDVQQHDBFGbG9hdGluZyBpbiBzcGFjZTET
 
 
-The program read from files specified on the command line, and outputs to standard
-output. If the ``-i`` option is used, input files are edited in place, adding 
-annotations. The original file will be backed up in the the same path with a ``~``
-appended.
+The program reads from files specified on the command line, and outputs to
+standard output. If the ``-i`` option is used, input files are edited in place,
+adding annotations (the original file will be backed-up with ``~`` appended).
 
