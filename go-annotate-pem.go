@@ -47,9 +47,6 @@ func handleFile(path string) {
 		if originalFileInfo, err = os.Stat(path); err != nil {
 			log.Fatalf("could not get file into for %q", path)
 		}
-		if _, err = os.Stat(backupPath); err == nil {
-			log.Fatalf("backup path %q already exists, aborting", backupPath)
-		}
 		if err := os.Rename(path, backupPath); err != nil {
 			log.Fatalf("failed to backup file %q, aborting", path)
 		}
@@ -92,8 +89,12 @@ func handleFile(path string) {
 
 // Take a slice of bytes defining a certificate, and extract information about
 // that certificate, returning a textual description as a slice of bytes (one
-// field per line, searated with \n). Fields that are extracted: Subject,
-// Issuer, Not Before, Not After.
+// field per line, separated with \n). Fields that are extracted: 
+// * Subject
+// * Issuer
+// * Not Before
+// * Not After
+// * Subj. Alt. Names [if present in cert]
 func annotateCert(certText []byte) []byte {
 	block, _ := pem.Decode(certText)
 	if block == nil {
@@ -105,11 +106,36 @@ func annotateCert(certText []byte) []byte {
 		return []byte("[unable to parse cert]\n")
 	}
 	var annotations bytes.Buffer
-	fmt.Fprintf(&annotations, "Subject:    %s\n", cert.Subject.String())
-	fmt.Fprintf(&annotations, "Issuer:     %s\n", cert.Issuer.String())
-	fmt.Fprintf(&annotations, "Not Before: %s\nNot After:  %s\n",
+	fmt.Fprintf(&annotations, "Subject:          %s\n", cert.Subject.String())
+	fmt.Fprintf(&annotations, "Issuer:           %s\n", cert.Issuer.String())
+	fmt.Fprintf(&annotations, "Not Before:       %s\nNot After:        %s\n",
 		cert.NotBefore.Format("2006-01-02 15:04:05 -07:00"),
 		cert.NotAfter.Format("2006-01-02 15:04:05 -07:00"))
+	var sanData bytes.Buffer
+	sanCount := 0
+	for _, dns := range cert.DNSNames {
+		if sanCount > 0 { fmt.Fprintf(&sanData, ",") }
+		sanCount += 1
+		fmt.Fprintf(&sanData, " DNS:%s", dns)
+	}
+	for _, email := range cert.EmailAddresses {
+		if sanCount > 0 { fmt.Fprintf(&sanData, ",") }
+		sanCount += 1
+		fmt.Fprintf(&sanData, " Email:%s", email)
+	}
+	for _, ip := range cert.IPAddresses {
+		if sanCount > 0 { fmt.Fprintf(&sanData, ",") }
+		sanCount += 1
+		fmt.Fprintf(&sanData, " IP:%s", ip.String())
+	}
+	for _, uri := range cert.URIs {
+		if sanCount > 0 { fmt.Fprintf(&sanData, ",") }
+		sanCount += 1
+		fmt.Fprintf(&sanData, " URI:%s", uri.String())
+	}
+	if sanData.Len() > 0 {
+		fmt.Fprintf(&annotations, "Subj. Alt. Names:%s\n", sanData.String());
+	}
 	return annotations.Bytes()
 }
 
