@@ -20,6 +20,7 @@ var certRx = regexp.MustCompile(
 var args struct {
 	inPlace bool
 	space   string
+	unsafe  bool
 	paths   []string
 }
 
@@ -31,6 +32,18 @@ func main() {
 }
 
 func handleFile(path string) {
+	var originalFileInfo os.FileInfo
+	var err error
+	if originalFileInfo, err = os.Stat(path); err != nil {
+		log.Fatalf("could not get file into for %q", path)
+	}
+
+	if !args.unsafe {
+		if originalFileInfo.Size() > 50_000_000 {
+			log.Fatalf("%q seems too big to be certificates; add -u if you are sure", path)
+		}
+	}
+
 	var outFile *os.File
 	var inPath string
 	if !args.inPlace {
@@ -42,11 +55,6 @@ func handleFile(path string) {
 		log.Printf("moving %q -> %q and re-creating original with annotations",
 			path,
 			backupPath)
-		var originalFileInfo os.FileInfo
-		var err error
-		if originalFileInfo, err = os.Stat(path); err != nil {
-			log.Fatalf("could not get file into for %q", path)
-		}
 		if err := os.Rename(path, backupPath); err != nil {
 			log.Fatalf("failed to backup file %q, aborting", path)
 		}
@@ -60,6 +68,7 @@ func handleFile(path string) {
 			log.Printf("couldn't set the file permissions for: %q", path)
 		}
 	}
+
 
 	// Slurp it all up
 	buf, err := ioutil.ReadFile(inPath)
@@ -146,11 +155,16 @@ func parseCommandLine() {
 		"s",
 		false,
 		"add space between certs to help readability")
+	unsafe := flag.Bool(
+		"u",
+		false,
+		"don't protect against ingesting huge files")
 	os.Args[0] = "annotate_pem"
 	flag.Parse()
 	args.inPlace = *inPlace
 	if *space {
 		args.space = "\n"
 	}
+	args.unsafe = *unsafe
 	args.paths = flag.Args()
 }
