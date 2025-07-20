@@ -103,7 +103,7 @@ func annotateCert(certText []byte) []byte {
 
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return []byte("[unable to parse cert]\n")
+		return []byte(fmt.Sprintf("[unable to parse cert: %v]\n", err))
 	}
 	var annotations bytes.Buffer
 	fmt.Fprintf(&annotations, "Subject:          %s\n", cert.Subject.String())
