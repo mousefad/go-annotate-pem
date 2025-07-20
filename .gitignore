@@ -1,1 +1,7 @@
 .vscode
+Makefile
+go-annotate-pem
+annotate-pem
+*.pem
+*.csr
+*.crt
