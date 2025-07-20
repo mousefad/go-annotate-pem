@@ -73,13 +73,11 @@ func handleFile(path string) {
 		certText := buf[match[0]:match[1]]
 		fmt.Fprintf(
 			outFile,
-			"%s%s%s%s%s%s",
-			args.space,
+			"%s%s%s%s",
 			preText,
 			args.space,
 			annotateCert(certText),
-			certText,
-			args.space)
+			certText)
 		prevEnd = match[1]
 	}
 	if prevEnd < len(buf) {
